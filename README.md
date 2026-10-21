@@ -1,6 +1,6 @@
 公開サイト：https://ozepon.github.io/sleep-shinaikun/
 
-ダウンロード：https://github.com/ozepon/sleep-shinaikun/releases/tag/v1.0.2
+ダウンロード：https://github.com/ozepon/sleep-shinaikun/releases/tag/v1.0.3
 
 # スリープしない君
 
@@ -138,3 +138,7 @@ QRはCore ImageでMac内に生成します。内容は `https://ntfy.sh/<トピ�
 iPhoneのホーム画面からntfyを開き、テスト通知を受信して、Macで再確認すると7日間再開します。送信成功だけでは延長しません。通知先トピック変更時も再確認が必要です。期限は再起動後も保存します。時計が確認日時より前になった場合も再確認します。
 
 MacはiPhoneの通知許可や実際の不達を検出できません。表示は受信確認期限に基づきます。有効期間中の到達保証ではありません。通知を受信しただけ、Macアプリを開いただけでは期限は延びません。
+
+## 1.0.3：Macくんアイコン
+
+ふわふわのMacくんをアプリアイコンとメニューバーのカラーアイコンに採用しました。ONと⚠︎の状態表示は維持しています。Resources内のアイコンをビルド時に同梱します。

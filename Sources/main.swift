@@ -116,7 +116,15 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         popover.contentViewController = NSHostingController(rootView: Panel(control: control, notifier: notifier))
         control.onChange = { [weak self] in
             guard let self else { return }
-            self.item.button?.image = NSImage(systemSymbolName: self.control.enabled ? "sun.max.fill" : "moon.zzz", accessibilityDescription: "スリープしない君")
+            if let url = Bundle.main.url(forResource: "MenuIcon", withExtension: "png"),
+               let image = NSImage(contentsOf: url) {
+                image.size = NSSize(width: 22, height: 22)
+                image.isTemplate = false
+                image.accessibilityDescription = "スリープしない君"
+                self.item.button?.image = image
+            } else {
+                self.item.button?.image = NSImage(systemSymbolName: "laptopcomputer", accessibilityDescription: "スリープしない君")
+            }
             self.item.button?.title = (self.notifier.enabled && self.notifier.confirmationRequired ? " ⚠︎" : "") + (self.control.enabled ? " ON" : "")
             self.item.button?.toolTip = "スリープしない君：スリープ防止 \(self.control.enabled ? "オン" : "オフ")"
         }
