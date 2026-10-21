@@ -64,41 +64,57 @@ final class SleepControl: ObservableObject {
 struct Panel: View {
     @ObservedObject var control: SleepControl
     @ObservedObject var notifier: BatteryNotifier
+    var panelHeight: CGFloat = 560
+    private let ink = Color(red: 0.15, green: 0.22, blue: 0.17)
     var body: some View {
-        ScrollView {
-        VStack(alignment: .leading, spacing: 22) {
+        VStack(spacing: 0) {
             HStack(spacing: 12) {
-                Image(systemName: control.enabled ? "sun.max.fill" : "moon.zzz.fill")
-                    .font(.system(size: 32)).foregroundStyle(control.enabled ? .orange : .secondary)
-                VStack(alignment: .leading, spacing: 3) {
-                    Text("スリープしない君").font(.title2.bold())
-                    Text("Macを、閉じたまま。 ").foregroundStyle(.secondary)
+                if let url = Bundle.main.url(forResource: "AppIcon", withExtension: "png"), let image = NSImage(contentsOf: url) {
+                    Image(nsImage: image).resizable().scaledToFit().frame(width: 76, height: 70)
                 }
-                Spacer()
-            }
-            HStack {
                 VStack(alignment: .leading, spacing: 5) {
-                    Text("スリープ防止").font(.headline)
-                    Text(control.enabled ? "オン · 起動を維持" : "オフ · 通常のスリープ").font(.caption).foregroundStyle(.secondary)
+                    Text("スリープしない君").font(.system(size: 20, weight: .bold, design: .rounded))
+                    Text(control.enabled ? "起きてるよ。まかせてね。" : "おやすみの準備、できてるよ。")
+                        .font(.system(size: 11)).foregroundStyle(.secondary)
                 }
-                Spacer()
-                Toggle("スリープ防止", isOn: Binding(get: { control.enabled }, set: { control.setEnabled($0) }))
-                    .labelsHidden().toggleStyle(.switch).disabled(control.busy || !control.available)
-            }
-            Text(control.message).font(.callout).fixedSize(horizontal: false, vertical: true)
-                .frame(minHeight: 38, alignment: .topLeading)
-            Divider()
-            BatteryPanel(notifier: notifier)
-            Divider()
-            Text("オンの間は、バッテリー使用中もシステム全体のスリープを無効にします。通気のよい場所で使用し、バッグに入れる前にはオフにしてください。")
-                .font(.caption).foregroundStyle(.secondary).fixedSize(horizontal: false, vertical: true)
+                Spacer(minLength: 0)
+            }.padding(.horizontal, 18).padding(.vertical, 10)
+                .background(Color(red: 0.90, green: 0.94, blue: 0.77))
+            ScrollView(.vertical, showsIndicators: true) {
+                VStack(alignment: .leading, spacing: 14) {
+                    VStack(alignment: .leading, spacing: 12) {
+                        HStack {
+                            VStack(alignment: .leading, spacing: 4) {
+                                Text("スリープ防止").font(.headline)
+                                Text(control.enabled ? "オン · ふたを閉じても起動を維持" : "オフ · いつもどおりスリープ")
+                                    .font(.caption).foregroundStyle(.secondary)
+                            }
+                            Spacer(minLength: 8)
+                            Toggle("スリープ防止", isOn: Binding(get: { control.enabled }, set: { control.setEnabled($0) }))
+                                .labelsHidden().toggleStyle(.switch).disabled(control.busy || !control.available)
+                        }
+                        Text(control.message).font(.caption).fixedSize(horizontal: false, vertical: true)
+                    }.padding(16).background(.white, in: RoundedRectangle(cornerRadius: 18))
+                    VStack(alignment: .leading, spacing: 12) {
+                        Label("iPhoneにお知らせ", systemImage: "iphone.radiowaves.left.and.right")
+                            .font(.system(size: 13, weight: .semibold, design: .rounded))
+                        BatteryPanel(notifier: notifier)
+                    }.padding(16).background(.white, in: RoundedRectangle(cornerRadius: 18))
+                    Label {
+                        Text("オンの間はMac全体のスリープを止めます。通気のよい場所で使い、バッグにしまう前にはオフにしてください。")
+                            .fixedSize(horizontal: false, vertical: true)
+                    } icon: { Image(systemName: "leaf") }
+                        .font(.caption).foregroundStyle(.secondary).padding(.horizontal, 4)
+                }.padding(14)
+            }.frame(maxWidth: .infinity, maxHeight: .infinity)
             HStack {
-                Text("設定変更には管理者認証が必要です").font(.caption2).foregroundStyle(.secondary)
-                Spacer()
+                Text("設定変更には管理者認証が必要です").font(.system(size: 10)).foregroundStyle(.secondary)
+                Spacer(minLength: 6)
                 Button("終了") { NSApp.terminate(nil) }.disabled(control.busy)
-            }
-        }.padding(24)
-        }.frame(width: 420, height: 650)
+            }.padding(.horizontal, 18).padding(.vertical, 10).background(.white.opacity(0.8))
+        }.frame(width: 390, height: panelHeight)
+            .background(Color(red: 0.97, green: 0.96, blue: 0.92))
+            .foregroundStyle(ink).tint(ink).preferredColorScheme(.light)
     }
 }
 
@@ -138,6 +154,10 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         if popover.isShown { popover.performClose(nil) }
         else {
             control.refresh()
+            let screenHeight = button.window?.screen?.visibleFrame.height ?? 700
+            let height = min(560, max(240, screenHeight - 80))
+            popover.contentViewController = NSHostingController(rootView: Panel(control: control, notifier: notifier, panelHeight: height))
+            popover.contentSize = NSSize(width: 390, height: height)
             NSApp.activate(ignoringOtherApps: true)
             popover.show(relativeTo: button.bounds, of: button, preferredEdge: .minY)
         }

@@ -1,6 +1,6 @@
 公開サイト：https://ozepon.github.io/sleep-shinaikun/
 
-ダウンロード：https://github.com/ozepon/sleep-shinaikun/releases/tag/v1.0.3
+ダウンロード：https://github.com/ozepon/sleep-shinaikun/releases/tag/v1.0.4
 
 # スリープしない君
 
@@ -142,3 +142,7 @@ MacはiPhoneの通知許可や実際の不達を検出できません。表示�
 ## 1.0.3：Macくんアイコン
 
 ふわふわのMacくんをアプリアイコンとメニューバーのカラーアイコンに採用しました。ONと⚠︎の状態表示は維持しています。Resources内のアイコンをビルド時に同梱します。
+
+## 1.0.4：設定画面の見直し
+
+Macくん付きの明るいカード風UIに変更。画面の有効な高さに合わせて最大560ptまでに制限し、中央の説明部分だけスクロールします。ヘッダーと終了ボタンは固定です。
