@@ -6,3 +6,6 @@
 .hero{grid-template-columns:repeat(2,minmax(0,1fr))}.hero>*,.phone-grid>*,.tech-grid>*,.notes>*{min-width:0}img{max-width:100%;height:auto}.visual{overflow:hidden}.mascot-wrap{width:100%;height:250px;min-width:0;overflow:hidden}.mascot{max-width:100%;max-height:250px;height:auto;object-fit:contain}.phone-grid{grid-template-columns:minmax(0,1fr) minmax(0,1.3fr);align-items:start}.phone{margin-top:20px}.hero h1{overflow-wrap:anywhere}p,li{overflow-wrap:break-word}@media(max-width:800px){.hero,.phone-grid{grid-template-columns:minmax(0,1fr)}.hero h1{font-size:clamp(44px,14vw,65px)}.label{right:12px;top:20px}.visual{padding-top:70px}.mock{margin:0 16px 20px;padding:18px}.mock-head{gap:8px;flex-wrap:wrap}.mascot-wrap{height:auto;min-height:180px;padding:10px 14px 20px}header{gap:12px}nav{flex-shrink:0}.brand{font-size:clamp(12px,3.4vw,15px)}.sun{margin-right:2px}}
 
 .visual{overflow:visible}
+
+/* Center the speech bubble within the curved header at every viewport. */
+.visual .label{left:50%;right:auto;top:20px;width:max-content;max-width:calc(100% - 48px);white-space:nowrap;transform:translateX(-50%) rotate(-5deg);margin:0}.visual{padding-top:82px;overflow:visible}
