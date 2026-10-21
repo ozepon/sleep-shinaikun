@@ -1,6 +1,6 @@
 公開サイト：https://ozepon.github.io/sleep-shinaikun/
 
-ダウンロード：https://github.com/ozepon/sleep-shinaikun/releases/latest
+ダウンロード：https://github.com/ozepon/sleep-shinaikun/releases/tag/v1.0.2
 
 # スリープしない君
 
