@@ -7,10 +7,12 @@ final class SleepControl: ObservableObject {
     @Published var busy = false
     @Published var message = "状態を確認しています…"
     @Published var available = false
+    @Published var limitedPermission = LimitedPermission.isInstalled()
     var onChange: (() -> Void)?
 
     func refresh() {
         guard !busy else { return }
+        limitedPermission = LimitedPermission.isInstalled()
         let process = Process()
         process.executableURL = URL(fileURLWithPath: "/usr/bin/pmset")
         process.arguments = ["-g"]
@@ -41,14 +43,36 @@ final class SleepControl: ObservableObject {
     func setEnabled(_ value: Bool, completion: ((Bool) -> Void)? = nil) {
         guard !busy else { return }
         busy = true
-        message = "macOSの認証を待っています…"
+        message = limitedPermission ? "スリープ設定を変更しています…" : "macOSの認証を待っています…"
         DispatchQueue.global(qos: .userInitiated).async {
-            // Only a fixed command and a boolean are passed to the privileged shell.
-            let script = NSAppleScript(source: "do shell script \"/usr/bin/pmset -a disablesleep \(value ? 1 : 0)\" with administrator privileges")
-            var error: NSDictionary?
-            script?.executeAndReturnError(&error)
-            let failure = error?[NSAppleScript.errorNumber] as? Int
-            let detail = error?[NSAppleScript.errorMessage] as? String
+            var failure: Int?
+            var detail: String?
+            if LimitedPermission.isInstalled() {
+                let process = Process()
+                process.executableURL = URL(fileURLWithPath: "/usr/bin/sudo")
+                process.arguments = LimitedPermission.arguments(enabled: value)
+                process.standardInput = FileHandle.nullDevice
+                let pipe = Pipe()
+                process.standardError = pipe
+                do {
+                    try process.run()
+                    _ = pipe.fileHandleForReading.readDataToEndOfFile()
+                    process.waitUntilExit()
+                    if process.terminationStatus != 0 {
+                        failure = Int(process.terminationStatus)
+                        detail = "限定許可が使えません。認証省略の設定を解除するか、管理者に設定を確認してください。"
+                    }
+                } catch { failure = -1; detail = error.localizedDescription }
+            } else {
+                let script = NSAppleScript(source: "do shell script \"/usr/bin/pmset -a disablesleep \(value ? 1 : 0)\" with administrator privileges")
+                var error: NSDictionary?
+                if script == nil { failure = -1; detail = "認証処理を作成できません" }
+                else {
+                    script?.executeAndReturnError(&error)
+                    failure = error?[NSAppleScript.errorNumber] as? Int
+                    detail = error?[NSAppleScript.errorMessage] as? String
+                }
+            }
             DispatchQueue.main.async {
                 self.busy = false
                 self.refresh()
@@ -59,6 +83,35 @@ final class SleepControl: ObservableObject {
             }
         }
     }
+    func configureLimitedPermission(remove: Bool) {
+        guard !busy, let shell = LimitedPermission.script(uid: getuid(), remove: remove) else { return }
+        let alert = NSAlert()
+        alert.messageText = remove ? "認証の省略を解除しますか？" : "スリープ切替だけ、認証を省略しますか？"
+        alert.informativeText = remove
+            ? "このユーザー用に追加した限定許可を削除します。解除にも管理者認証が必要です。スリープ防止がオンなら、先にオフにしてください。"
+            : "このMacの現在のユーザーに、pmsetのスリープ切替（0と1）だけを許可します。同じユーザーで動く他のアプリもこの2操作を実行できるようになります。任意の管理者コマンドや他の電源設定は許可しません。アプリを削除する前にここから解除してください。"
+        alert.addButton(withTitle: remove ? "認証して解除" : "認証して有効にする")
+        alert.addButton(withTitle: "キャンセル")
+        guard alert.runModal() == .alertFirstButtonReturn else { return }
+        guard !remove || !enabled else { message = "先にスリープ防止をオフにしてから解除してください。"; return }
+        busy = true
+        message = "限定許可の変更には、今回だけ管理者認証が必要です…"
+        DispatchQueue.global(qos: .userInitiated).async {
+            var error: NSDictionary?
+            let script = NSAppleScript(source: LimitedPermission.appleScript(shell))
+            if script != nil { script?.executeAndReturnError(&error) }
+            DispatchQueue.main.async {
+                self.busy = false
+                self.refresh()
+                if script == nil || error != nil {
+                    self.message = "限定許可を変更できませんでした。キャンセル、またはMacの管理設定をご確認ください。"
+                } else if self.limitedPermission == !remove {
+                    self.message = remove ? "限定許可を解除しました。次回から通常の管理者認証を使います。" : "スリープ切替だけ認証を省略します。"
+                } else { self.message = "設定を確認できません。通常の認証を使ってください。" }
+            }
+        }
+    }
+
 }
 
 struct Panel: View {
@@ -94,6 +147,14 @@ struct Panel: View {
                                 .labelsHidden().toggleStyle(.switch).disabled(control.busy || !control.available)
                         }
                         Text(control.message).font(.caption).fixedSize(horizontal: false, vertical: true)
+                        Divider()
+                        Label(control.limitedPermission ? "このユーザーのスリープ切替は認証省略中" : "切り替えごとに管理者認証", systemImage: "lock.shield")
+                            .font(.caption).fixedSize(horizontal: false, vertical: true)
+                        Button(control.limitedPermission ? "認証省略を解除…" : "切替の認証を省略する…") {
+                            control.configureLimitedPermission(remove: control.limitedPermission)
+                        }.font(.caption).disabled(control.busy)
+                        Text("初回設定・解除には管理者認証が必要です。同じユーザーの他アプリにもスリープ切替だけを許可します。")
+                            .font(.system(size: 10)).foregroundStyle(.secondary).fixedSize(horizontal: false, vertical: true)
                     }.padding(16).background(.white, in: RoundedRectangle(cornerRadius: 18))
                     VStack(alignment: .leading, spacing: 12) {
                         Label("iPhoneにお知らせ", systemImage: "iphone.radiowaves.left.and.right")
@@ -108,7 +169,7 @@ struct Panel: View {
                 }.padding(14)
             }.frame(maxWidth: .infinity, maxHeight: .infinity)
             HStack {
-                Text("設定変更には管理者認証が必要です").font(.system(size: 10)).foregroundStyle(.secondary)
+                Text(control.limitedPermission ? "限定許可：スリープの切替のみ" : "設定変更には管理者認証が必要です").font(.system(size: 10)).foregroundStyle(.secondary)
                 Spacer(minLength: 6)
                 Button("終了") { NSApp.terminate(nil) }.disabled(control.busy)
             }.padding(.horizontal, 18).padding(.vertical, 10).background(.white.opacity(0.8))

@@ -54,5 +54,5 @@ main = (root/'Sources/main.swift').read_text()
 assert 'do shell script \\"/usr/bin/pmset -a disablesleep' in main
 assert '(value ? 1 : 0)' in main
 assert 'topic' not in main[:main.index('struct Panel')]
-print('PASS: privileged command uses fixed absolute path and boolean only (source inspection)')
+print('PASS: fallback pmset command uses fixed absolute path and boolean only (source inspection)')
 print('Local attack harness completed. No external service was contacted.')

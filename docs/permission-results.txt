@@ -1,0 +1,33 @@
+PASS: root is not an installation target
+PASS: system UIDs are rejected
+PASS: rule permits exactly two fixed commands for one UID
+PASS: no unrestricted root permission
+PASS: no wildcard arguments
+PASS: no environment override permission
+PASS: enable uses noninteractive fixed argv
+PASS: disable uses boolean-selected zero
+PASS: system visudo accepts generated rule
+PASS: shell parses installation without execution
+PASS: reject target symlinks
+PASS: refuse to overwrite or remove unexpected content
+PASS: validate existing and final sudo policy
+PASS: policy is not writable by ordinary user
+PASS: AppleScript compiles without requesting privilege
+PASS: shell parses removal without execution
+PASS: reject target symlinks
+PASS: refuse to overwrite or remove unexpected content
+PASS: validate existing and final sudo policy
+PASS: policy is not writable by ordinary user
+PASS: AppleScript compiles without requesting privilege
+Limited-permission checks passed: 21. No installation or privileged commands were executed.
+PASS: isolated install transaction succeeds
+PASS: installed fixture equals exact narrow rule
+PASS: isolated reinstall is idempotent
+PASS: isolated uninstall removes only managed rule
+PASS: refuse overwrite of unknown policy
+PASS: refuse deletion of unknown policy
+PASS: unknown policy is preserved
+PASS: refuse symlink on install and removal
+PASS: unrelated policy is preserved
+PASS: transaction temporary files are cleaned on success and failure
+Total limited-permission checks passed: 31. Fixture only; real sudo configuration was not modified.

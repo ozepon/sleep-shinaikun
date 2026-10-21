@@ -1,2 +1,2 @@
-7ade9926838e3dbad7e72f4ac6da30cff93dd6ac07370db3600a2c38e4538c20  sleep-shinaikun-mac.zip
-94520f3f2f6c7829eda821962c29288a5f147b7ec7636b672e453e2928dc8d30  sleep-shinaikun-source.zip
+dae68576b93aa3603278427e2dc68bae13c0a32b1d2faebd714be2012a5997d1  sleep-shinaikun-mac.zip
+26322726304faa410ad4a966ecea04141d22ddf106530a2d431670d272ab0ad3  sleep-shinaikun-source.zip

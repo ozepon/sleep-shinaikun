@@ -73,7 +73,7 @@ Security checks passed: 71
 PASS: redirect destination received ZERO requests
 PASS: original application signature verifies
 PASS: modified executable fails signature verification
-PASS: privileged command uses fixed absolute path and boolean only (source inspection)
+PASS: fallback pmset command uses fixed absolute path and boolean only (source inspection)
 Local attack harness completed. No external service was contacted.
 Battery policy: 6 checks passed
 QR generation and independent Vision decoding: passed
