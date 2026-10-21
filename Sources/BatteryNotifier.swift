@@ -156,7 +156,7 @@ struct BatteryPanel: View {
             Text("バッテリー \(notifier.percent.map { "\($0)%" } ?? "取得不可") · 10%未満で通知")
                 .font(.caption).foregroundStyle(.secondary)
             if notifier.enabled {
-                Text("初回は「iPhone登録QR」を押し、画面の手順で登録してください。")
+                Text("下のQRをiPhoneのカメラで読み取ってください。")
                     .font(.caption).fixedSize(horizontal: false, vertical: true)
                 if notifier.confirmationRequired {
                     Label("通知停止中 · 受信確認が必要です", systemImage: "exclamationmark.triangle.fill")
@@ -166,9 +166,20 @@ struct BatteryPanel: View {
                 } else {
                     Text(notifier.expiryText).font(.caption).foregroundStyle(.secondary)
                 }
+                if let url = PhoneSetup.url(topic: notifier.topic), let qr = PhoneSetup.qr(url) {
+                    Image(nsImage: qr).interpolation(.none).resizable().scaledToFit()
+                        .frame(width: 170, height: 170).padding(12).background(.white, in: RoundedRectangle(cornerRadius: 12))
+                        .frame(maxWidth: .infinity)
+                        .accessibilityLabel("iPhone登録用QRコード")
+                    Text("① iPhoneで読み取る → ② 共有からホーム画面に追加 → ③ ntfyを開いて通知を許可 → ④ Macでテスト通知")
+                        .font(.caption).fixedSize(horizontal: false, vertical: true)
+                } else {
+                    Text("通知先のトピックが不正なためQRを表示できません。")
+                        .font(.caption).foregroundStyle(.orange)
+                }
                 TextField("通知用トピック", text: $notifier.topic).textFieldStyle(.roundedBorder).disabled(notifier.sending)
                 HStack {
-                    Button("iPhone登録QR") { showingSetup = true }.disabled(!notifier.validTopic)
+                    Button("詳しい登録手順") { showingSetup = true }.disabled(!notifier.validTopic)
                     Button("コピー") { notifier.copyTopic() }
                     Button("テスト通知") { notifier.test() }.disabled(notifier.sending || !notifier.validTopic)
                     Link("設定方法 ↗", destination: URL(string: "https://docs.ntfy.sh/subscribe/pwa/")!)
