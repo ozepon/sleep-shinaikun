@@ -1,0 +1,79 @@
+PASS: baseline previous sender already rejects trailing newline
+PASS: reject malicious topic 1
+PASS: reject malicious QR URL 1
+PASS: reject malicious request 1
+PASS: reject malicious topic 2
+PASS: reject malicious QR URL 2
+PASS: reject malicious request 2
+PASS: reject malicious topic 3
+PASS: reject malicious QR URL 3
+PASS: reject malicious request 3
+PASS: reject malicious topic 4
+PASS: reject malicious QR URL 4
+PASS: reject malicious request 4
+PASS: reject malicious topic 5
+PASS: reject malicious QR URL 5
+PASS: reject malicious request 5
+PASS: reject malicious topic 6
+PASS: reject malicious QR URL 6
+PASS: reject malicious request 6
+PASS: reject malicious topic 7
+PASS: reject malicious QR URL 7
+PASS: reject malicious request 7
+PASS: reject malicious topic 8
+PASS: reject malicious QR URL 8
+PASS: reject malicious request 8
+PASS: reject malicious topic 9
+PASS: reject malicious QR URL 9
+PASS: reject malicious request 9
+PASS: reject malicious topic 10
+PASS: reject malicious QR URL 10
+PASS: reject malicious request 10
+PASS: reject malicious topic 11
+PASS: reject malicious QR URL 11
+PASS: reject malicious request 11
+PASS: reject malicious topic 12
+PASS: reject malicious QR URL 12
+PASS: reject malicious request 12
+PASS: reject malicious topic 13
+PASS: reject malicious QR URL 13
+PASS: reject malicious request 13
+PASS: reject malicious topic 14
+PASS: reject malicious QR URL 14
+PASS: reject malicious request 14
+PASS: reject malicious topic 15
+PASS: reject malicious QR URL 15
+PASS: reject malicious request 15
+PASS: reject malicious topic 16
+PASS: reject malicious QR URL 16
+PASS: reject malicious request 16
+PASS: reject malicious topic 17
+PASS: reject malicious QR URL 17
+PASS: reject malicious request 17
+PASS: accept boundary 16
+PASS: accept boundary 100
+PASS: fixed HTTPS QR host
+PASS: fixed HTTPS publish host
+PASS: POST only
+PASS: payload excludes device name and credentials
+PASS: JSON topic roundtrip
+PASS: reject negative battery
+PASS: reject oversized battery
+PASS: no cookie storage
+PASS: no credential storage
+PASS: real HTTP redirect refused; original 307 retained
+PASS: redirect attack completed locally
+PASS: first setup requires receipt confirmation
+PASS: just confirmed is valid
+PASS: one second before seven days is valid
+PASS: exactly seven days expires
+PASS: after seven days expires
+PASS: clock rollback requires recheck
+Security checks passed: 71
+PASS: redirect destination received ZERO requests
+PASS: original application signature verifies
+PASS: modified executable fails signature verification
+PASS: privileged command uses fixed absolute path and boolean only (source inspection)
+Local attack harness completed. No external service was contacted.
+Battery policy: 6 checks passed
+QR generation and independent Vision decoding: passed
