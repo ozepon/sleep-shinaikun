@@ -1,0 +1,52 @@
+{
+  "name": "sleep-shinaikun-notify",
+  "main": "src/worker.mjs",
+  "compatibility_date": "2026-10-01",
+  "compatibility_flags": [
+    "nodejs_compat"
+  ],
+  "alias": {
+    "crypto": "./src/shims/crypto.cjs"
+  },
+  "assets": {
+    "directory": "./public",
+    "binding": "ASSETS",
+    "run_worker_first": [
+      "/api/*"
+    ]
+  },
+  "triggers": {
+    "crons": [
+      "0 0 * * *"
+    ]
+  },
+  "ratelimits": [
+    {
+      "name": "LIMITER",
+      "namespace_id": "1001",
+      "simple": {
+        "limit": 60,
+        "period": 60
+      }
+    },
+    {
+      "name": "TOKEN_LIMITER",
+      "namespace_id": "1002",
+      "simple": {
+        "limit": 20,
+        "period": 60
+      }
+    }
+  ],
+  "vars": {
+    "VAPID_SUBJECT": "https://ozepon.github.io/sleep-shinaikun/"
+  },
+  "d1_databases": [
+    {
+      "binding": "DB",
+      "database_name": "sleep-shinaikun",
+      "database_id": "REPLACE_AFTER_CREATION",
+      "migrations_dir": "migrations"
+    }
+  ]
+}

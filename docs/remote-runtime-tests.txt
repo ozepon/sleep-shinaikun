@@ -1,0 +1,1 @@
+Real workerd/D1 integration passed: forged auth, pairing, 10 concurrent clicks coalesced, role separation, single claim, verified completion, encrypted Push decrypted by receiver, no duplicate completion push, expired command rejected, 60 concurrent enrollments capped at 50.

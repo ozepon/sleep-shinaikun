@@ -24,6 +24,16 @@ struct NotificationSecurity {
         ])
         return request
     }
+    static func lidRequest(topic: String) -> URLRequest? {
+        guard var request = request(topic: topic, test: true, percent: 0) else { return nil }
+        request.httpBody = try? JSONSerialization.data(withJSONObject: [
+            "topic": topic, "title": "スリープしない君",
+            "message": "Macのふたを閉じました。スリープ防止はオンです。",
+            "priority": 3, "tags": ["computer"]
+        ])
+        return request
+    }
+
 }
 
 // A redirect must never forward a private topic or notification body elsewhere.

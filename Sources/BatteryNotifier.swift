@@ -106,7 +106,12 @@ final class BatteryNotifier: ObservableObject {
         NotificationSecurity.validTopic(topic)
     }
     func test() { send(test: true, percent: percent ?? 0) }
-    private func send(test: Bool, percent: Int) {
+    func notifyLidClosed() {
+        // A busy sender drops this event rather than replaying an old closure later.
+        guard enabled, confirmationValid, !sending else { return }
+        send(test: false, percent: percent ?? 0, lid: true)
+    }
+    private func send(test: Bool, percent: Int, lid: Bool = false) {
         guard !sending, enabled else { return }
         guard test || confirmationValid else { updateAttention(); return }
         guard validTopic else { status = "トピックは16〜100文字の半角英数字・_・-を使用してください"; return }
@@ -115,7 +120,7 @@ final class BatteryNotifier: ObservableObject {
         status = "送信中…"
         generation = UUID()
         let requestGeneration = generation
-        guard let request = NotificationSecurity.request(topic: topic, test: test, percent: percent) else {
+        guard let request = (lid ? NotificationSecurity.lidRequest(topic: topic) : NotificationSecurity.request(topic: topic, test: test, percent: percent)) else {
             sending = false
             status = "通知データが不正です"
             return
@@ -129,13 +134,13 @@ final class BatteryNotifier: ObservableObject {
                 guard error == nil, let response = response as? HTTPURLResponse, (200...299).contains(response.statusCode) else {
                     self.failures += 1
                     self.retryAt = Date().addingTimeInterval(min(3600, 300 * pow(2, Double(min(self.failures - 1, 4)))))
-                    self.status = "送信できませんでした。接続を確認してください。低残量通知は5〜60分間隔で再試行します。"
+                    self.status = lid ? "ふた閉じ通知を送信できませんでした。接続を確認してください。この通知は再送しません。" : "送信できませんでした。接続を確認してください。低残量通知は5〜60分間隔で再試行します。"
                     return
                 }
                 self.failures = 0
                 self.retryAt = .distantPast
-                if !test { self.alreadySent = true }
-                else { self.awaitingConfirmation = true }
+                if !test && !lid { self.alreadySent = true }
+                else if test { self.awaitingConfirmation = true }
                 self.status = "サービスへの送信完了 · iPhone側で受信を確認してください"
             }
         }
@@ -152,7 +157,7 @@ struct BatteryPanel: View {
     @State private var showingSetup = false
     var body: some View {
         VStack(alignment: .leading, spacing: 10) {
-            Toggle("iPhoneに低残量を通知", isOn: $notifier.enabled).toggleStyle(.switch)
+            Toggle("iPhoneに低残量・ふた閉じを通知", isOn: $notifier.enabled).toggleStyle(.switch)
             Text("バッテリー \(notifier.percent.map { "\($0)%" } ?? "取得不可") · 10%未満で通知")
                 .font(.caption).foregroundStyle(.secondary)
             if notifier.enabled {

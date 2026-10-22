@@ -1,0 +1,23 @@
+✔ forged tokens are rejected before DB, including signed-prefix tampering (17.646041ms)
+✔ foreign Origin is rejected before DB; edge rate limit fails closed (0.89175ms)
+✔ enrollment is admin only and capped at exactly 50 pairs (9.916209ms)
+✔ pairing token is one use, expires, and cannot operate Mac (2.409208ms)
+✔ SSRF endpoints, credentials, local network, and malformed subscription keys are rejected (0.565042ms)
+✔ phone cannot poll, report completion, send arbitrary pushes, or enroll; Mac cannot issue command (1.457625ms)
+✔ only the paired Mac can claim once; no success before its result; duplicate click coalesces (2.610042ms)
+✔ expired command is not returned to Mac, failure never becomes success (1.859041ms)
+✔ revoked devices can neither receive commands nor issue commands (1.878625ms)
+✔ oversized input is rejected without writing command state (0.722417ms)
+✔ ten commands per rolling day; expired/past completed cannot be replayed (4.827208ms)
+✔ pushes are fixed, encrypted, no redirects, idempotent, capped at 10/day (8.871334ms)
+✔ global delivery cap and in-flight cap reject without network (1.909667ms)
+✔ missing secrets fail closed; executing expiry is unknown, not false success (1.137417ms)
+✔ receiver decrypts encrypted Push; VAPID JWT verifies independently; tampering fails (1.5655ms)
+ℹ tests 15
+ℹ suites 0
+ℹ pass 15
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 119.295042

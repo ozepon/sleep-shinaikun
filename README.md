@@ -171,3 +171,11 @@ Macくん付きの明るいカード風UIに変更。画面の有効な高さに
 xcrun swiftc Sources/LimitedPermission.swift Tests/Permission/main.swift -module-cache-path build/module-cache -framework Cocoa -o build/permission-tests
 build/permission-tests
 ```
+
+### ふたを閉じた通知（開発中）
+スリープ防止とiPhone通知がオンで、受信確認が有効な間だけ、ふたの「開→閉」を約5秒間隔で検知して通知します。macOSのIOKitから状態を読み取ります。追加の管理者権限は不要です。起動時から閉じている場合・状態が取得できない場合は通知しません。送信中のイベントは破棄し、後から再送しません。短時間の開閉は検知できない場合があります。実機の開閉からiPhoneへの到達は未確認です。
+
+今後の追加候補：低残量の通知に続いて、Mac側でスリープ防止を自動でオフにする任意設定。通知障害でもオフ処理を妨げず、管理者認証が必要な構成では無人実行できない旨を表示する予定です。現時点では自動オフは実装していません。
+
+### 専用iPhoneアプリと遠隔オフ（未公開の開発版）
+専用PWA・Cloudflare Workers/D1・Macの接続処理を追加しています。低残量通知からiPhoneアプリを開き、本人が「オフにする」を選ぶとMacが指示を確認します。オフを読み取り確認してから結果を報告・通知します。操作しなければ変更しません。指示は2分で失効し、結果不明は成功扱いにしません。詳細・運営用の公開手順・セキュリティ上限は[server/README.md](server/README.md)を参照してください。Cloudflareへの公開と実機確認が完了するまでは既存のntfy通知を利用できます。

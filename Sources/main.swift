@@ -117,6 +117,7 @@ final class SleepControl: ObservableObject {
 struct Panel: View {
     @ObservedObject var control: SleepControl
     @ObservedObject var notifier: BatteryNotifier
+    @ObservedObject var remote: RemoteControl
     var panelHeight: CGFloat = 560
     private let ink = Color(red: 0.15, green: 0.22, blue: 0.17)
     var body: some View {
@@ -161,6 +162,7 @@ struct Panel: View {
                             .font(.system(size: 13, weight: .semibold, design: .rounded))
                         BatteryPanel(notifier: notifier)
                     }.padding(16).background(.white, in: RoundedRectangle(cornerRadius: 18))
+                    RemotePanel(remote: remote).padding(16).background(.white, in: RoundedRectangle(cornerRadius: 18))
                     Label {
                         Text("オンの間はMac全体のスリープを止めます。通気のよい場所で使い、バッグにしまう前にはオフにしてください。")
                             .fixedSize(horizontal: false, vertical: true)
@@ -181,6 +183,8 @@ struct Panel: View {
 
 final class AppDelegate: NSObject, NSApplicationDelegate {
     let control = SleepControl()
+    let lidMonitor = LidMonitor()
+    let remote = RemoteControl()
     lazy var notifier = BatteryNotifier()
     var item: NSStatusItem!
     let popover = NSPopover()
@@ -190,9 +194,10 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         item.button?.target = self
         item.button?.action = #selector(show)
         popover.behavior = .transient
-        popover.contentViewController = NSHostingController(rootView: Panel(control: control, notifier: notifier))
+        popover.contentViewController = NSHostingController(rootView: Panel(control: control, notifier: notifier, remote: remote))
         control.onChange = { [weak self] in
             guard let self else { return }
+            if !self.control.enabled { _ = self.lidMonitor.poll(enabled: false) }
             if let url = Bundle.main.url(forResource: "MenuIcon", withExtension: "png"),
                let image = NSImage(contentsOf: url) {
                 image.size = NSSize(width: 22, height: 22)
@@ -207,7 +212,15 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         }
         notifier.onAttentionChange = { [weak self] in self?.control.onChange?() }
         control.refresh()
-        timer = Timer.scheduledTimer(withTimeInterval: 5, repeats: true) { [weak self] _ in self?.control.refresh() }
+        _ = lidMonitor.poll(enabled: control.available && control.enabled)
+        timer = Timer.scheduledTimer(withTimeInterval: 5, repeats: true) { [weak self] _ in guard let self else { return }
+            self.control.refresh()
+            self.remote.poll(control: self.control)
+            if self.lidMonitor.poll(enabled: self.control.available && self.control.enabled) {
+                self.notifier.notifyLidClosed()
+                if self.remote.enabled { self.remote.notify("lid") }
+            }
+        }
         show()
     }
     @objc func show() {
@@ -217,7 +230,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
             control.refresh()
             let screenHeight = button.window?.screen?.visibleFrame.height ?? 700
             let height = min(560, max(240, screenHeight - 80))
-            popover.contentViewController = NSHostingController(rootView: Panel(control: control, notifier: notifier, panelHeight: height))
+            popover.contentViewController = NSHostingController(rootView: Panel(control: control, notifier: notifier, remote: remote, panelHeight: height))
             popover.contentSize = NSSize(width: 390, height: height)
             NSApp.activate(ignoringOtherApps: true)
             popover.show(relativeTo: button.bounds, of: button, preferredEdge: .minY)

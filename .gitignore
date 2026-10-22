@@ -4,3 +4,11 @@ __pycache__/
 *.tar.gz
 
 release/
+
+server/node_modules/
+.wrangler/
+server/.dev.vars*
+
+server/.admin-token
+server/*connection*.json
+server/.secrets*.json
