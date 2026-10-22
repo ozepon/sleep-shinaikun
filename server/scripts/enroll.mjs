@@ -1,6 +1,7 @@
-import {readFileSync,writeFileSync} from 'node:fs';
+import {readFileSync,writeFileSync,existsSync} from 'node:fs';
 const origin=process.argv[2],output=process.argv[3];
 if(!origin||!output)throw Error('Usage: node scripts/enroll.mjs https://your.workers.dev /private/path/mac-connection.json');
+if(existsSync(output))throw Error('Output exists; no new enrollment was created');
 const u=new URL(origin);if(u.protocol!=='https:'||!u.hostname.endsWith('.workers.dev'))throw Error('Invalid origin');
 const admin=readFileSync(new URL('../.admin-token',import.meta.url),'utf8').trim();
 const response=await fetch(new URL('/api/admin/enroll',origin),{method:'POST',headers:{Authorization:'Bearer '+admin},redirect:'error'});

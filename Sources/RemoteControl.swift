@@ -1,9 +1,12 @@
 import Cocoa
 import Security
 import SwiftUI
+import UniformTypeIdentifiers
 
 final class RemoteControl: ObservableObject {
-  @Published var origin = UserDefaults.standard.string(forKey: "remoteOrigin") ?? ""
+  @Published var origin =
+    UserDefaults.standard.string(forKey: "remoteOrigin")
+    ?? "https://sleep-shinaikun-notify.ozepon-d.workers.dev"
   @Published var credentialInput = ""
   @Published var pairCode = ""
   @Published var status = "専用通知サーバーは未接続です"
@@ -32,7 +35,7 @@ final class RemoteControl: ObservableObject {
     }
   }
   private var resultAttempts = 0
-  private var token: String? {
+  private var connection: [String: String]? {
     let query: [String: Any] = [
       kSecClass as String: kSecClassGenericPassword,
       kSecAttrService as String: "local.lidawake.remote", kSecAttrAccount as String: "mac",
@@ -42,9 +45,11 @@ final class RemoteControl: ObservableObject {
     guard SecItemCopyMatching(query as CFDictionary, &result) == errSecSuccess,
       let data = result as? Data
     else { return nil }
-    return String(data: data, encoding: .utf8)
+    return (try? JSONSerialization.jsonObject(with: data)) as? [String: String]
   }
-  private var base: URL? {
+  private var token: String? { connection?["token"] }
+  private var base: URL? { connection?["origin"].flatMap(Self.validOrigin) }
+  private static func validOrigin(_ origin: String) -> URL? {
     guard let u = URL(string: origin), u.scheme == "https", u.user == nil, u.password == nil,
       u.port == nil, u.path.isEmpty || u.path == "/", u.query == nil, u.fragment == nil,
       u.host?.hasSuffix(".workers.dev") == true
@@ -52,7 +57,15 @@ final class RemoteControl: ObservableObject {
     return u
   }
   func connect() {
-    guard base != nil,
+    if credentialInput.isEmpty {
+      guard base != nil, token != nil, origin == connection?["origin"] else {
+        status = "接続ファイルを読み込むか、接続トークンを入力してください"
+        return
+      }
+      issuePair()
+      return
+    }
+    guard Self.validOrigin(origin) != nil,
       credentialInput.range(of: "^[a-f0-9]{64}$", options: .regularExpression) != nil
     else {
       status = "HTTPSのworkers.dev URLと接続トークンを確認してください"
@@ -64,7 +77,9 @@ final class RemoteControl: ObservableObject {
     ]
     SecItemDelete(query as CFDictionary)
     var item = query
-    item[kSecValueData as String] = Data(credentialInput.utf8)
+    item[kSecValueData as String] = try? JSONSerialization.data(withJSONObject: [
+      "origin": origin, "token": credentialInput,
+    ])
     item[kSecAttrAccessible as String] = kSecAttrAccessibleAfterFirstUnlockThisDeviceOnly
     guard SecItemAdd(item as CFDictionary, nil) == errSecSuccess else {
       status = "接続情報をキーチェーンに保存できません"
@@ -72,13 +87,39 @@ final class RemoteControl: ObservableObject {
     }
     UserDefaults.standard.set(origin, forKey: "remoteOrigin")
     credentialInput = ""
+    issuePair()
+  }
+  private func issuePair() {
+    pairCode = ""
     call("pair") { [weak self] d in
       guard let self else { return }
       if let t = d?["pairToken"] as? String, let k = d?["publicKey"] as? String {
         self.pairCode = t + "." + k
-        self.status = "iPhoneの専用アプリへ登録コードを貼り付けてください（5分有効）"
+        self.status = "専用アプリでQRを読み取ってください（5分有効）"
+      } else {
+        self.status = "登録コードを発行できません。接続情報・通信を確認してください"
       }
     }
+  }
+  func importConnection() {
+    let panel = NSOpenPanel()
+    panel.allowedContentTypes = [.json]
+    panel.allowsMultipleSelection = false
+    panel.message = "運営から受け取った接続ファイルを選んでください。他人へ共有しないでください。"
+    guard panel.runModal() == .OK, let url = panel.url else { return }
+    guard let size = try? url.resourceValues(forKeys: [.fileSizeKey]).fileSize, size <= 4096,
+      let data = try? Data(contentsOf: url),
+      let values = (try? JSONSerialization.jsonObject(with: data)) as? [String: String],
+      let address = values["origin"], Self.validOrigin(address) != nil,
+      let credential = values["macToken"],
+      credential.range(of: "^[a-f0-9]{64}$", options: .regularExpression) != nil
+    else {
+      status = "接続ファイルの形式が正しくありません"
+      return
+    }
+    origin = address
+    credentialInput = credential
+    connect()
   }
   private func call(
     _ path: String, data: [String: Any] = [:], completion: @escaping ([String: Any]?) -> Void
@@ -184,9 +225,11 @@ struct RemotePanel: View {
     VStack(alignment: .leading, spacing: 8) {
       Text("専用アプリ接続（準備版）").bold()
       Toggle("専用通知とiPhoneからのオフ操作", isOn: $remote.enabled)
+      Button("接続ファイルを読み込む…") { remote.importConnection() }
       TextField("通知サーバー https://…workers.dev", text: $remote.origin)
       SecureField("Mac接続トークン", text: $remote.credentialInput)
-      Text("① iPhoneで上のURLを開き、ホーム画面に追加します。② 追加したアプリから、下のQRを読み取ります。").font(.caption).fixedSize(horizontal: false, vertical: true)
+      Text("① iPhoneで上のURLを開き、ホーム画面に追加します。② 追加したアプリから、下のQRを読み取ります。").font(.caption).fixedSize(
+        horizontal: false, vertical: true)
       Button("登録コードを発行") { remote.connect() }
       if !remote.pairCode.isEmpty {
         if let qr = PhoneSetup.qr(remote.pairCode) {
@@ -194,7 +237,8 @@ struct RemotePanel: View {
             width: 170, height: 170
           ).padding(10).background(.white)
         }
-        Text("専用アプリ内の「MacのQRを読み取る」で読み取ってください（5分有効）。").font(.caption).fixedSize(horizontal: false, vertical: true)
+        Text("専用アプリ内の「MacのQRを読み取る」で読み取ってください（5分有効）。").font(.caption).fixedSize(
+          horizontal: false, vertical: true)
         TextField("iPhone登録コード", text: $remote.pairCode)
         Button("登録コードをコピー") {
           NSPasteboard.general.clearContents()

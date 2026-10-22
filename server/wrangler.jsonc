@@ -45,8 +45,11 @@
     {
       "binding": "DB",
       "database_name": "sleep-shinaikun",
-      "database_id": "REPLACE_AFTER_CREATION",
+      "database_id": "6345bd00-2c65-4396-9c9d-3a799b2c66c3",
       "migrations_dir": "migrations"
     }
-  ]
+  ],
+  "account_id": "d5174049e9ffd4c79501c5ef9e4bc0a4",
+  "workers_dev": true,
+  "preview_urls": false
 }
